@@ -1,15 +1,18 @@
-using MiniERP.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using MiniERP.Web.Components;
+using MiniERP.Web.Data;
+using MiniERP.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+builder.Services.AddScoped<ClienteService>();
 
 var app = builder.Build();
 

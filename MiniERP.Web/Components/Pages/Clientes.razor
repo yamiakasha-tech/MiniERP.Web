@@ -1,0 +1,230 @@
+﻿@page "/clientes"
+@rendermode InteractiveServer
+@inject IJSRuntime JS
+@using MiniERP.Web.Models
+@using MiniERP.Web.Services
+@inject ClienteService ClienteService
+
+<h3 class="mb-3">Gestão de Clientes</h3>
+
+<!-- Botão novo cliente -->
+<button class="btn btn-primary mb-3" @onclick="MostrarFormulario">
+    Novo Cliente
+</button>
+
+<!-- Tabela -->
+<table class="table table-striped table-bordered">
+    <thead class="table-dark">
+        <tr>
+            <th>Id</th>
+            <th>Nome</th>
+            <th>Email</th>
+            <th>Telefone</th>
+            <th>Nome da Empresa</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var cliente in clientes)
+        {
+            <tr>
+                <td>@cliente.Id</td>
+                <td>@cliente.Nome</td>
+                <td>@cliente.Email</td>
+                <td>@cliente.Telefone</td>
+                <td>@cliente.NomeEmpresa</td>
+                <td>
+                    <!-- Botão editar -->
+                    <button class="btn btn-warning btn-sm me-2"
+                            @onclick="() => Editar(cliente)">
+                        Editar
+                    </button>
+
+                    <!-- Botão apagar -->
+                    <button class="btn btn-danger btn-sm"
+                            @onclick="() => Apagar(cliente.Id)">
+                        Apagar
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Formulário -->
+@if (mostrarFormulario)
+{
+    <div class="card p-3 mt-3">
+        <h5>@(clienteAtual.Id == 0 ? "Novo Cliente" : "Editar Cliente")</h5>
+
+        <!-- Formulário com validação -->
+        <EditForm Model="clienteAtual" OnValidSubmit="Guardar">
+
+            <!-- Ativa validações -->
+            <DataAnnotationsValidator />
+
+            <!-- Mostra erros gerais -->
+            <ValidationSummary />
+
+            <div class="mb-2">
+                <InputText class="form-control"
+                           @bind-Value="clienteAtual.Nome"
+                           placeholder="Nome" />
+                <ValidationMessage For="@(() => clienteAtual.Nome)" />
+            </div>
+
+            <div class="mb-2">
+                <InputText class="form-control"
+                           @bind-Value="clienteAtual.Email"
+                           placeholder="Email" />
+                <ValidationMessage For="@(() => clienteAtual.Email)" />
+            </div>
+
+            <div class="mb-2">
+                <InputText class="form-control"
+                           @bind-Value="clienteAtual.Telefone"
+                           placeholder="Telefone" />
+                <ValidationMessage For="@(() => clienteAtual.Telefone)" />
+            </div>
+
+            <div class="mb-2">
+                <InputText class="form-control"
+                           @bind-Value="clienteAtual.NomeEmpresa"
+                           placeholder="Empresa" />
+                <ValidationMessage For="@(() => clienteAtual.NomeEmpresa)" />
+            </div>
+
+            <button type="submit" class="btn btn-success me-2">
+                Guardar
+            </button>
+
+            <button type="button" class="btn btn-secondary" @onclick="Cancelar">
+                Cancelar
+            </button>
+
+        </EditForm>
+    </div>
+}
+
+@code {
+
+    private string mensagem = string.Empty;
+
+    /// <summary>
+    /// Lista de clientes
+    /// </summary>
+    private List<Cliente> clientes = new();
+
+    /// <summary>
+    /// Cliente atual
+    /// </summary>
+    private Cliente clienteAtual = new();
+
+    /// <summary>
+    /// Controla visibilidade do formulário
+    /// </summary>
+    private bool mostrarFormulario = false;
+
+    /// <summary>
+    /// Carrega dados ao iniciar
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarClientes();
+    }
+
+    /// <summary>
+    /// Vai buscar clientes à BD
+    /// </summary>
+    private async Task CarregarClientes()
+    {
+        clientes = await ClienteService.GetAllAsync();
+    }
+
+    /// <summary>
+    /// Mostrar formulário
+    /// </summary>
+    private void MostrarFormulario()
+    {
+        clienteAtual = new Cliente();
+        mostrarFormulario = true;
+    }
+
+    /// <summary>
+    /// Editar cliente
+    /// </summary>
+    private void Editar(Cliente cliente)
+    {
+        clienteAtual = cliente;
+
+        mostrarFormulario = true;
+    }
+
+    /// <summary>
+    /// Guardar cliente
+    /// </summary>
+    private async Task Guardar()
+    {
+        // Validação extra de segurança
+        if (string.IsNullOrWhiteSpace(clienteAtual.Nome) ||
+            string.IsNullOrWhiteSpace(clienteAtual.Email))
+        {
+            mensagem = "Preenche todos os campos obrigatórios!";
+            return;
+        }
+
+        if (clienteAtual.Id == 0)
+        {
+            await ClienteService.AddAsync(clienteAtual);
+            mensagem = "Cliente criado com sucesso!";
+        }
+        else
+        {
+            await ClienteService.UpdateAsync(clienteAtual);
+            mensagem = "Cliente atualizado com sucesso!";
+        }
+
+        mostrarFormulario = false;
+        await CarregarClientes();
+    }
+
+    /// <summary>
+    /// Apagar cliente
+    /// </summary>
+    private async Task Apagar(int id)
+    {
+        if (id <= 0)
+    {
+        mensagem = "Cliente inválido!";
+        return;
+    }
+
+    bool confirmar = await JS.InvokeAsync<bool>("confirm", "Tens a certeza que queres apagar este cliente?");
+
+    if (!confirmar)
+        return;
+
+    var cliente = await ClienteService.GetByIdAsync(id);
+
+    if (cliente == null)
+    {
+        mensagem = "Cliente não encontrado!";
+        return;
+    }
+
+    await ClienteService.DeleteAsync(id);
+
+    mensagem = "Cliente apagado com sucesso!";
+    await CarregarClientes();
+}
+    
+
+    /// <summary>
+    /// Cancelar operação
+    /// </summary>
+
+    private void Cancelar()
+    {
+        mostrarFormulario = false;
+    }
+}
