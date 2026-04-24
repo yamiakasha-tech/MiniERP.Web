@@ -2,15 +2,30 @@
 
 namespace MiniERP.Web.Models
 {
+    /// <summary>
+    /// Representa um empregado
+    /// </summary>
     public class Empregado
     {
         [Key]
         public int Id { get; set; }
 
-        public String? Nome { get; set; }
+        /// <summary>
+        /// Nome do empregado
+        /// </summary>
+        [Required(ErrorMessage = "Nome é obrigatório")]
+        public string Nome { get; set; } = string.Empty;
 
-        public String? Email { get; set; }
+        /// <summary>
+        /// Email do empregado
+        /// </summary>
+        [Required(ErrorMessage = "Email é obrigatório")]
+        [EmailAddress(ErrorMessage = "Email inválido")]
+        public string Email { get; set; } = string.Empty;
 
-        public String? Funcao { get; set; }
+        /// <summary>
+        /// Função do empregado
+        /// </summary>
+        public string? Funcao { get; set; }
     }
 }

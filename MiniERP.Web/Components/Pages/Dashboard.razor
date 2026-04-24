@@ -1,0 +1,83 @@
+﻿@page "/dashboard"
+@rendermode InteractiveServer
+
+@using MiniERP.Web.Services
+
+@inject ClienteService ClienteService
+@inject ProjetoService ProjetoService
+@inject TarefaService TarefaService
+@inject EmpregadoService EmpregadoService
+@inject FaturaService FaturaService
+
+<h3 class="mb-4">Dashboard</h3>
+
+<div class="row">
+
+    <!-- Clientes -->
+    <div class="col-md-3">
+        <div class="card text-white bg-primary mb-3 p-3">
+            <h5>Clientes</h5>
+            <h2>@totalClientes</h2>
+        </div>
+    </div>
+
+    <!-- Projetos -->
+    <div class="col-md-3">
+        <div class="card text-white bg-success mb-3 p-3">
+            <h5>Projetos</h5>
+            <h2>@totalProjetos</h2>
+        </div>
+    </div>
+
+    <!-- Tarefas -->
+    <div class="col-md-3">
+        <div class="card text-white bg-warning mb-3 p-3">
+            <h5>Tarefas</h5>
+            <h2>@totalTarefas</h2>
+        </div>
+    </div>
+
+    <!-- Empregados -->
+    <div class="col-md-3">
+        <div class="card text-white bg-dark mb-3 p-3">
+            <h5>Empregados</h5>
+            <h2>@totalEmpregados</h2>
+        </div>
+    </div>
+
+</div>
+
+<!-- Faturação -->
+<div class="card p-3 mt-3">
+    <h4>Total Faturado</h4>
+    <h2 class="text-success">@totalFaturado €</h2>
+</div>
+
+@code {
+
+    private int totalClientes;
+    private int totalProjetos;
+    private int totalTarefas;
+    private int totalEmpregados;
+
+    private decimal totalFaturado;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarDados();
+    }
+
+    /// <summary>
+    /// Carrega dados para o dashboard
+    /// </summary>
+    private async Task CarregarDados()
+    {
+        totalClientes = (await ClienteService.GetAllAsync()).Count;
+        totalProjetos = (await ProjetoService.GetAllAsync()).Count;
+        totalTarefas = (await TarefaService.GetAllAsync()).Count;
+        totalEmpregados = (await EmpregadoService.GetAllAsync()).Count;
+
+        var faturas = await FaturaService.GetAllAsync();
+        totalFaturado = faturas.Sum(f => f.Total);
+    }
+}

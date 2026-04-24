@@ -31,7 +31,7 @@ namespace MiniERP.Web.Services
         /// <summary>
         /// Devolve um cliente pelo ID
         /// </summary>
-        public async Task<Cliente> GetByIdAsync (int id)
+        public async Task<Cliente> GetByIdAsync(int id)
         {
             var cliente = await _context.Clientes.FindAsync(id);
             if (cliente == null)
@@ -44,7 +44,7 @@ namespace MiniERP.Web.Services
         /// <summary>
         /// Adiciona um novo cliente
         /// </summary>
-        public async Task AddAsync (Cliente cliente)
+        public async Task AddAsync(Cliente cliente)
         {
             _context.Clientes.Add(cliente);
             await _context.SaveChangesAsync();
@@ -56,11 +56,17 @@ namespace MiniERP.Web.Services
         /// </summary>
         public async Task UpdateAsync(Cliente cliente)
         {
-            if (cliente == null)
-                throw new Exception("Cliente inválido");
+            var existente = await _context.Clientes.FindAsync(cliente.Id);
 
-            _context.Clientes.Update(cliente);
-            await _context.SaveChangesAsync();
+            if (existente != null)
+            {
+                existente.Nome = cliente.Nome;
+                existente.Email = cliente.Email;
+                existente.Telefone = cliente.Telefone;
+                existente.NomeEmpresa = cliente.NomeEmpresa;
+
+                await _context.SaveChangesAsync();
+            }
         }
 
 

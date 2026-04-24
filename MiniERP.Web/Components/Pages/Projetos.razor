@@ -1,0 +1,196 @@
+﻿@page "/projetos"
+@rendermode InteractiveServer
+
+@using MiniERP.Web.Models
+@using MiniERP.Web.Services
+
+@inject ProjetoService ProjetoService
+@inject ClienteService ClienteService
+
+<h3 class="mb-3">Gestão de Projetos</h3>
+
+<button class="btn btn-primary mb-3" @onclick="MostrarFormulario">
+    Novo Projeto
+</button>
+
+<!-- Tabela -->
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Cliente</th>
+            <th>Data Início</th>
+            <th>Data Fim</th>
+            <th>Orçamento</th>
+            <th>Estado</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var projeto in projetos)
+        {
+            <tr @key="projeto.Id">
+                <td>@projeto.Nome</td>
+                <td>@projeto.Cliente?.Nome</td>
+                <td>@projeto.DataInicio.ToShortDateString()</td>
+                <td>@projeto.DataFim?.ToShortDateString()</td>
+                <td>@projeto.Orcamento.ToString("C")</td>
+                <td>@projeto.Estado</td>
+                <td>
+                    <button class="btn btn-warning btn-sm me-2"
+                            @onclick="() => Editar(projeto)">
+                        Editar
+                    </button>
+
+                    <button class="btn btn-danger btn-sm"
+                            @onclick="() => ConfirmarApagar(projeto.Id)">
+                        Apagar
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Formulário -->
+@if (mostrarFormulario)
+{
+    <div class="card p-3 mt-3">
+
+        <EditForm Model="projetoAtual" OnValidSubmit="Guardar">
+
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="mb-2">
+                <InputText class="form-control"
+                           @bind-Value="projetoAtual.Nome"
+                           placeholder="Nome do projeto" />
+                <ValidationMessage For="@(() => projetoAtual.Nome)" />
+            </div>
+
+            <!-- 🔥 DROPDOWN DE CLIENTES -->
+            <div class="mb-2">
+                <InputSelect class="form-control"
+                             @bind-Value="projetoAtual.ClienteId">
+
+                    <option value="0">-- Seleciona um cliente --</option>
+
+                    @foreach (var cliente in clientes)
+                    {
+                        <option value="@cliente.Id">@cliente.Nome</option>
+                    }
+
+                </InputSelect>
+            </div>
+
+            <div class="mb-2">
+                <InputDate class="form-control"
+                           @bind-Value="projetoAtual.DataInicio" />
+            </div>
+
+            <div class="mb-2">
+                <InputDate class="form-control"
+                           @bind-Value="projetoAtual.DataFim" />
+            </div>
+
+            <div class="mb-2">
+                <InputNumber class="form-control"
+                             @bind-Value="projetoAtual.Orcamento" />
+            </div>
+
+            <div class="mb-2">
+                <InputText class="form-control"
+                           @bind-Value="projetoAtual.Estado"
+                           placeholder="Estado" />
+            </div>
+
+            <button type="submit" class="btn btn-success me-2">
+                Guardar
+            </button>
+
+            <button type="button" class="btn btn-secondary" @onclick="Cancelar">
+                Cancelar
+            </button>
+
+        </EditForm>
+    </div>
+}
+
+@code {
+
+    private List<Projeto> projetos = new();
+    private List<Cliente> clientes = new();
+
+    private Projeto projetoAtual = new();
+    private bool mostrarFormulario = false;
+
+    private int? projetoParaApagar = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarDados();
+    }
+
+    /// <summary>
+    /// Carrega projetos e clientes
+    /// </summary>
+    private async Task CarregarDados()
+    {
+        projetos = await ProjetoService.GetAllAsync();
+        clientes = await ClienteService.GetAllAsync();
+    }
+
+    private void MostrarFormulario()
+    {
+        projetoAtual = new Projeto();
+        mostrarFormulario = true;
+    }
+
+    private void Editar(Projeto projeto)
+    {
+        projetoAtual = new Projeto
+        {
+            Id = projeto.Id,
+            Nome = projeto.Nome,
+            ClienteId = projeto.ClienteId,
+            DataInicio = projeto.DataInicio,
+            DataFim = projeto.DataFim,
+            Orcamento = projeto.Orcamento,
+            Estado = projeto.Estado
+        };
+
+        mostrarFormulario = true;
+    }
+
+    private async Task Guardar()
+    {
+        if (projetoAtual.Id == 0)
+            await ProjetoService.AddAsync(projetoAtual);
+        else
+            await ProjetoService.UpdateAsync(projetoAtual);
+
+        mostrarFormulario = false;
+        await CarregarDados();
+    }
+
+    private void ConfirmarApagar(int id)
+    {
+        projetoParaApagar = id;
+    }
+
+    private async Task ApagarConfirmado()
+    {
+        if (projetoParaApagar.HasValue)
+        {
+            await ProjetoService.DeleteAsync(projetoParaApagar.Value);
+            projetoParaApagar = null;
+            await CarregarDados();
+        }
+    }
+
+    private void Cancelar()
+    {
+        mostrarFormulario = false;
+    }
+}

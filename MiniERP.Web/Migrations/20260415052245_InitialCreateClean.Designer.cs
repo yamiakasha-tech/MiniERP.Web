@@ -12,8 +12,8 @@ using MiniERP.Web.Data;
 namespace MiniERP.Web.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260408141400_first")]
-    partial class first
+    [Migration("20260415052245_InitialCreateClean")]
+    partial class InitialCreateClean
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,13 +34,17 @@ namespace MiniERP.Web.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Email")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Nome")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("NomeEmpresa")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.Property<string>("Telefone")
                         .HasColumnType("nvarchar(max)");
@@ -59,12 +63,14 @@ namespace MiniERP.Web.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Email")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Funcao")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Nome")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -80,8 +86,8 @@ namespace MiniERP.Web.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateOnly>("Data")
-                        .HasColumnType("date");
+                    b.Property<DateTime>("Data")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("ProjetoId")
                         .HasColumnType("int");
@@ -90,6 +96,8 @@ namespace MiniERP.Web.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ProjetoId");
 
                     b.ToTable("Faturas");
                 });
@@ -105,22 +113,26 @@ namespace MiniERP.Web.Migrations
                     b.Property<int>("ClienteId")
                         .HasColumnType("int");
 
-                    b.Property<DateOnly>("DataFim")
-                        .HasColumnType("date");
+                    b.Property<DateTime?>("DataFim")
+                        .HasColumnType("datetime2");
 
-                    b.Property<DateOnly>("DataInicio")
-                        .HasColumnType("date");
+                    b.Property<DateTime>("DataInicio")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Estado")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Nome")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Orcamento")
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ClienteId");
 
                     b.ToTable("Projetos");
                 });
@@ -137,12 +149,15 @@ namespace MiniERP.Web.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Estado")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Nome")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Prioridade")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("ProjetoId")
@@ -150,7 +165,52 @@ namespace MiniERP.Web.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("EmpregadoId");
+
+                    b.HasIndex("ProjetoId");
+
                     b.ToTable("Tarefas");
+                });
+
+            modelBuilder.Entity("MiniERP.Web.Models.Fatura", b =>
+                {
+                    b.HasOne("MiniERP.Web.Models.Projeto", "Projeto")
+                        .WithMany()
+                        .HasForeignKey("ProjetoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Projeto");
+                });
+
+            modelBuilder.Entity("MiniERP.Web.Models.Projeto", b =>
+                {
+                    b.HasOne("MiniERP.Web.Models.Cliente", "Cliente")
+                        .WithMany()
+                        .HasForeignKey("ClienteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Cliente");
+                });
+
+            modelBuilder.Entity("MiniERP.Web.Models.Tarefa", b =>
+                {
+                    b.HasOne("MiniERP.Web.Models.Empregado", "Empregado")
+                        .WithMany()
+                        .HasForeignKey("EmpregadoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MiniERP.Web.Models.Projeto", "Projeto")
+                        .WithMany()
+                        .HasForeignKey("ProjetoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Empregado");
+
+                    b.Navigation("Projeto");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,0 +1,187 @@
+﻿@page "/tarefas"
+@rendermode InteractiveServer
+
+@using MiniERP.Web.Models
+@using MiniERP.Web.Services
+
+@inject TarefaService TarefaService
+@inject ProjetoService ProjetoService
+@inject EmpregadoService EmpregadoService
+
+<h3 class="mb-3">Gestão de Tarefas</h3>
+
+<button class="btn btn-primary mb-3" @onclick="MostrarFormulario">
+    Nova Tarefa
+</button>
+
+<!-- Tabela -->
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Projeto</th>
+            <th>Empregado</th>
+            <th>Estado</th>
+            <th>Prioridade</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var tarefa in tarefas)
+        {
+            <tr @key="tarefa.Id">
+                <td>@tarefa.Nome</td>
+                <td>@tarefa.Projeto?.Nome</td>
+                <td>@tarefa.Empregado?.Nome</td>
+                <td>@tarefa.Estado</td>
+                <td>@tarefa.Prioridade</td>
+                <td>
+                    <button class="btn btn-warning btn-sm me-2"
+                            @onclick="() => Editar(tarefa)">
+                        Editar
+                    </button>
+
+                    <button class="btn btn-danger btn-sm"
+                            @onclick="() => ConfirmarApagar(tarefa.Id)">
+                        Apagar
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Formulário -->
+@if (mostrarFormulario)
+{
+    <div class="card p-3 mt-3">
+
+        <EditForm Model="tarefaAtual" OnValidSubmit="Guardar">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <InputText class="form-control mb-2"
+                       @bind-Value="tarefaAtual.Nome"
+                       placeholder="Nome da tarefa" />
+
+            <!-- Projeto -->
+            <InputSelect class="form-control mb-2"
+                         @bind-Value="tarefaAtual.ProjetoId">
+
+                <option value="0">Seleciona Projeto</option>
+
+                @foreach (var projeto in projetos)
+                {
+                    <option value="@projeto.Id">@projeto.Nome</option>
+                }
+            </InputSelect>
+
+            <!-- Empregado -->
+            <InputSelect class="form-control mb-2"
+                         @bind-Value="tarefaAtual.EmpregadoId">
+
+                <option value="0">Seleciona Empregado</option>
+
+                @foreach (var emp in empregados)
+                {
+                    <option value="@emp.Id">@emp.Nome</option>
+                }
+            </InputSelect>
+
+            <InputText class="form-control mb-2"
+                       @bind-Value="tarefaAtual.Estado"
+                       placeholder="Estado" />
+
+            <InputText class="form-control mb-2"
+                       @bind-Value="tarefaAtual.Prioridade"
+                       placeholder="Prioridade" />
+
+            <button type="submit" class="btn btn-success me-2">
+                Guardar
+            </button>
+
+            <button type="button" class="btn btn-secondary" @onclick="Cancelar">
+                Cancelar
+            </button>
+        </EditForm>
+    </div>
+}
+
+@code {
+
+    private List<Tarefa> tarefas = new();
+    private List<Projeto> projetos = new();
+    private List<Empregado> empregados = new();
+
+    private Tarefa tarefaAtual = new();
+    private bool mostrarFormulario = false;
+
+    private int? tarefaParaApagar = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarDados();
+    }
+
+    /// <summary>
+    /// Carrega tudo necessário
+    /// </summary>
+    private async Task CarregarDados()
+    {
+        tarefas = await TarefaService.GetAllAsync();
+        projetos = await ProjetoService.GetAllAsync();
+        empregados = await EmpregadoService.GetAllAsync();
+    }
+
+    private void MostrarFormulario()
+    {
+        tarefaAtual = new Tarefa();
+        mostrarFormulario = true;
+    }
+
+    private void Editar(Tarefa t)
+    {
+        tarefaAtual = new Tarefa
+        {
+            Id = t.Id,
+            Nome = t.Nome,
+            ProjetoId = t.ProjetoId,
+            EmpregadoId = t.EmpregadoId,
+            Estado = t.Estado,
+            Prioridade = t.Prioridade
+        };
+
+        mostrarFormulario = true;
+    }
+
+    private async Task Guardar()
+    {
+        if (tarefaAtual.Id == 0)
+            await TarefaService.AddAsync(tarefaAtual);
+        else
+            await TarefaService.UpdateAsync(tarefaAtual);
+
+        mostrarFormulario = false;
+        await CarregarDados();
+    }
+
+    private void ConfirmarApagar(int id)
+    {
+        tarefaParaApagar = id;
+    }
+
+    private async Task ApagarConfirmado()
+    {
+        if (tarefaParaApagar.HasValue)
+        {
+            await TarefaService.DeleteAsync(tarefaParaApagar.Value);
+            tarefaParaApagar = null;
+            await CarregarDados();
+        }
+    }
+
+    private void Cancelar()
+    {
+        mostrarFormulario = false;
+    }
+}

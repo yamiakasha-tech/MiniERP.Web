@@ -2,16 +2,16 @@
 
 namespace MiniERP.Web.Models
 {
+    /// <summary>
+    /// Representa um cliente do sistema
+    /// </summary>
+    public class Cliente
+    {
         /// <summary>
-        /// Representa um cliente do sistema
+        /// Identificador único do cliente
         /// </summary>
-        public class Cliente
-        {
-            /// <summary>
-            /// Identificador único do cliente
-            /// </summary>
-            [Key]
-            public int Id { get; set; }
+        [Key]
+        public int Id { get; set; }
 
         /// <summary>
         /// Nome do cliente (obrigatório)
@@ -31,13 +31,13 @@ namespace MiniERP.Web.Models
         /// Telefone do cliente (opcional)
         /// </summary>
         [Phone(ErrorMessage = "Número de telefone inválido")]
-            public string? Telefone { get; set; }
+        public string? Telefone { get; set; }
 
-            /// <summary>
-            /// Nome da empresa (opcional)
-            /// </summary>
-            [StringLength(150, ErrorMessage = "Máximo 150 caracteres")]
-            public string? NomeEmpresa { get; set; }
+        /// <summary>
+        /// Nome da empresa (opcional)
+        /// </summary>
+        [StringLength(150, ErrorMessage = "Máximo 150 caracteres")]
+        public string? NomeEmpresa { get; set; }
 
-        }
+    }
 }

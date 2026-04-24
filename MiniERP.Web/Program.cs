@@ -13,6 +13,11 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddScoped<ClienteService>();
+builder.Services.AddScoped<ProjetoService>();
+builder.Services.AddScoped<TarefaService>();
+builder.Services.AddScoped<EmpregadoService>();
+builder.Services.AddScoped<FaturaService>();
+
 
 var app = builder.Build();
 

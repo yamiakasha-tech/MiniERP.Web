@@ -194,31 +194,31 @@
     private async Task Apagar(int id)
     {
         if (id <= 0)
-    {
-        mensagem = "Cliente inválido!";
-        return;
+        {
+            mensagem = "Cliente inválido!";
+            return;
+        }
+
+        bool confirmar = await JS.InvokeAsync<bool>("confirm", "Tens a certeza que queres apagar este cliente?");
+
+        if (!confirmar)
+            return;
+
+        var cliente = await ClienteService.GetByIdAsync(id);
+
+        if (cliente == null)
+        {
+            mensagem = "Cliente não encontrado!";
+            return;
+        }
+
+        await ClienteService.DeleteAsync(id);
+
+        mensagem = "Cliente apagado com sucesso!";
+        await CarregarClientes();
     }
 
-    bool confirmar = await JS.InvokeAsync<bool>("confirm", "Tens a certeza que queres apagar este cliente?");
-
-    if (!confirmar)
-        return;
-
-    var cliente = await ClienteService.GetByIdAsync(id);
-
-    if (cliente == null)
-    {
-        mensagem = "Cliente não encontrado!";
-        return;
-    }
-
-    await ClienteService.DeleteAsync(id);
-
-    mensagem = "Cliente apagado com sucesso!";
-    await CarregarClientes();
-}
     
-
     /// <summary>
     /// Cancelar operação
     /// </summary>

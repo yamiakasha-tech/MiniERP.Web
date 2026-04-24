@@ -8,9 +8,15 @@
 
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="flex-column">
-        <div class="nav-item px-3">
+        @* <div class="nav-item px-3">
             <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">
                 <span class="bi bi-house"></span> Home
+            </NavLink>
+        </div> *@
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/dashboard">
+                <span class="bi bi-people"></span> Dashboard
             </NavLink>
         </div>
 
@@ -21,10 +27,29 @@
         </div>
 
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
+            <NavLink class="nav-link" href="/projetos">
+                <span class="bi bi-people"></span> Projetos
             </NavLink>
         </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/tarefas">
+                <span class="bi bi-people"></span> Tarefas
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/empregados">
+                <span class="bi bi-people"></span> Empregados
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/faturacao">
+                <span class="bi bi-people"></span> Faturação
+            </NavLink>
+        </div>
+       
     </nav>
 </div>
 
