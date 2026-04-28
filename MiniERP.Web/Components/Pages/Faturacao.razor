@@ -4,6 +4,7 @@
 @using MiniERP.Web.Models
 @using MiniERP.Web.Services
 
+@inject IJSRuntime JS
 @inject FaturaService FaturaService
 @inject ProjetoService ProjetoService
 
@@ -20,8 +21,8 @@
     </div>
 }
 
-<table class="table table-striped">
-    <thead>
+<table class="table table-striped table-bordered">
+    <thead class="table-dark">
         <tr>
             <th>Projeto</th>
             <th>Data</th>
@@ -43,7 +44,7 @@
                     </button>
 
                     <button class="btn btn-danger btn-sm"
-                            @onclick="() => ConfirmarApagar(f.Id)">
+                            @onclick="() => Apagar(f.Id)">
                         Apagar
                     </button>
                 </td>
@@ -55,6 +56,7 @@
 @if (mostrarFormulario)
 {
     <div class="card p-3 mt-3">
+        <h5>@(faturaAtual.Id == 0 ? "Nova Fatura" : "Editar Fatura")</h5>
 
         <EditForm Model="faturaAtual" OnValidSubmit="Guardar">
 
@@ -101,7 +103,6 @@
     private Fatura faturaAtual = new();
     private bool mostrarFormulario = false;
 
-    private int? faturaParaApagar = null;
     private string mensagem = string.Empty;
 
     protected override async Task OnInitializedAsync()
@@ -151,20 +152,16 @@
         await CarregarDados();
     }
 
-    private void ConfirmarApagar(int id)
+    private async Task Apagar(int id)
     {
-        faturaParaApagar = id;
-    }
+        bool confirmar = await JS.InvokeAsync<bool>("confirm", "Tens a certeza que queres apagar esta fatura?");
 
-    private async Task ApagarConfirmado()
-    {
-        if (faturaParaApagar.HasValue)
-        {
-            await FaturaService.DeleteAsync(faturaParaApagar.Value);
-            mensagem = "Fatura apagada com sucesso!";
-            faturaParaApagar = null;
-            await CarregarDados();
-        }
+        if (!confirmar)
+            return;
+
+        await FaturaService.DeleteAsync(id);
+        mensagem = "Fatura apagada com sucesso!";
+        await CarregarDados();
     }
 
     private void Cancelar()

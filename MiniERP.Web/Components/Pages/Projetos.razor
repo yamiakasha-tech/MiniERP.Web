@@ -4,6 +4,7 @@
 @using MiniERP.Web.Models
 @using MiniERP.Web.Services
 
+@inject IJSRuntime JS
 @inject ProjetoService ProjetoService
 @inject ClienteService ClienteService
 
@@ -13,9 +14,16 @@
     Novo Projeto
 </button>
 
+@if (!string.IsNullOrEmpty(mensagem))
+{
+    <div class="alert alert-success">
+        @mensagem
+    </div>
+}
+
 <!-- Tabela -->
-<table class="table table-striped">
-    <thead>
+<table class="table table-striped table-bordered">
+    <thead class="table-dark">
         <tr>
             <th>Nome</th>
             <th>Cliente</th>
@@ -43,7 +51,7 @@
                     </button>
 
                     <button class="btn btn-danger btn-sm"
-                            @onclick="() => ConfirmarApagar(projeto.Id)">
+                            @onclick="() => Apagar(projeto.Id)">
                         Apagar
                     </button>
                 </td>
@@ -56,6 +64,7 @@
 @if (mostrarFormulario)
 {
     <div class="card p-3 mt-3">
+        <h5>@(projetoAtual.Id == 0 ? "Novo Projeto" : "Editar Projeto")</h5>
 
         <EditForm Model="projetoAtual" OnValidSubmit="Guardar">
 
@@ -69,7 +78,6 @@
                 <ValidationMessage For="@(() => projetoAtual.Nome)" />
             </div>
 
-            <!-- 🔥 DROPDOWN DE CLIENTES -->
             <div class="mb-2">
                 <InputSelect class="form-control"
                              @bind-Value="projetoAtual.ClienteId">
@@ -124,8 +132,7 @@
 
     private Projeto projetoAtual = new();
     private bool mostrarFormulario = false;
-
-    private int? projetoParaApagar = null;
+    private string mensagem = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -166,27 +173,30 @@
     private async Task Guardar()
     {
         if (projetoAtual.Id == 0)
+        {
             await ProjetoService.AddAsync(projetoAtual);
+            mensagem = "Projeto criado com sucesso!";
+        }
         else
+        {
             await ProjetoService.UpdateAsync(projetoAtual);
+            mensagem = "Projeto atualizado com sucesso!";
+        }
 
         mostrarFormulario = false;
         await CarregarDados();
     }
 
-    private void ConfirmarApagar(int id)
+    private async Task Apagar(int id)
     {
-        projetoParaApagar = id;
-    }
+        bool confirmar = await JS.InvokeAsync<bool>("confirm", "Tens a certeza que queres apagar este projeto?");
 
-    private async Task ApagarConfirmado()
-    {
-        if (projetoParaApagar.HasValue)
-        {
-            await ProjetoService.DeleteAsync(projetoParaApagar.Value);
-            projetoParaApagar = null;
-            await CarregarDados();
-        }
+        if (!confirmar)
+            return;
+
+        await ProjetoService.DeleteAsync(id);
+        mensagem = "Projeto apagado com sucesso!";
+        await CarregarDados();
     }
 
     private void Cancelar()

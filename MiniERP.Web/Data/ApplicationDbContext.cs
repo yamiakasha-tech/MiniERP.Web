@@ -1,12 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MiniERP.Web.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace MiniERP.Web.Data
 {
     /// <summary>
     /// Contexto da base de dados da aplicação
     /// </summary>
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext : IdentityDbContext
     {
         /// <summary>
         /// Construtor do contexto

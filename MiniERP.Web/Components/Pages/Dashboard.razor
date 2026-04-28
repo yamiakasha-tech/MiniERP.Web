@@ -1,6 +1,8 @@
-﻿@page "/dashboard"
+@page "/dashboard"
 @rendermode InteractiveServer
 
+@using System.Globalization
+@using MiniERP.Web.Models
 @using MiniERP.Web.Services
 
 @inject ClienteService ClienteService
@@ -11,73 +13,250 @@
 
 <h3 class="mb-4">Dashboard</h3>
 
-<div class="row">
+@if (aCarregar)
+{
+    <div class="alert alert-info">A carregar indicadores...</div>
+}
+else
+{
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-primary h-100">
+                <div class="card-body">
+                    <span class="text-muted small">Clientes registados</span>
+                    <h2 class="mt-2 mb-0">@totalClientes</h2>
+                </div>
+            </div>
+        </div>
 
-    <!-- Clientes -->
-    <div class="col-md-3">
-        <div class="card text-white bg-primary mb-3 p-3">
-            <h5>Clientes</h5>
-            <h2>@totalClientes</h2>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-success h-100">
+                <div class="card-body">
+                    <span class="text-muted small">Projectos activos</span>
+                    <h2 class="mt-2 mb-0">@projetosAtivos</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-warning h-100">
+                <div class="card-body">
+                    <span class="text-muted small">Tarefas pendentes</span>
+                    <h2 class="mt-2 mb-0">@tarefasPendentes</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-dark h-100">
+                <div class="card-body">
+                    <span class="text-muted small">Total faturado</span>
+                    <h2 class="mt-2 mb-0">@FormatarMoeda(totalFaturado)</h2>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Projetos -->
-    <div class="col-md-3">
-        <div class="card text-white bg-success mb-3 p-3">
-            <h5>Projetos</h5>
-            <h2>@totalProjetos</h2>
+    <div class="row g-3 mb-4">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <strong>Resumo operacional</strong>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-7">Projectos registados</dt>
+                        <dd class="col-5 text-end">@totalProjetos</dd>
+
+                        <dt class="col-7">Tarefas registadas</dt>
+                        <dd class="col-5 text-end">@totalTarefas</dd>
+
+                        <dt class="col-7">Empregados registados</dt>
+                        <dd class="col-5 text-end">@totalEmpregados</dd>
+
+                        <dt class="col-7">Faturas emitidas</dt>
+                        <dd class="col-5 text-end">@totalFaturas</dd>
+
+                        <dt class="col-7">Orcamento total dos projectos</dt>
+                        <dd class="col-5 text-end">@FormatarMoeda(orcamentoTotal)</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <strong>Indicadores de gestao</strong>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-7">Taxa de conclusao de tarefas</dt>
+                        <dd class="col-5 text-end">@taxaConclusaoTarefas.ToString("N1")%</dd>
+
+                        <dt class="col-7">Valor medio por fatura</dt>
+                        <dd class="col-5 text-end">@FormatarMoeda(valorMedioFatura)</dd>
+
+                        <dt class="col-7">Receita vs. orcamento</dt>
+                        <dd class="col-5 text-end">@percentagemFaturada.ToString("N1")%</dd>
+
+                        <dt class="col-7">Projectos concluidos</dt>
+                        <dd class="col-5 text-end">@projetosConcluidos</dd>
+
+                        <dt class="col-7">Tarefas de prioridade alta</dt>
+                        <dd class="col-5 text-end">@tarefasAltaPrioridade</dd>
+                    </dl>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Tarefas -->
-    <div class="col-md-3">
-        <div class="card text-white bg-warning mb-3 p-3">
-            <h5>Tarefas</h5>
-            <h2>@totalTarefas</h2>
+    <div class="row g-3">
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <strong>Projectos por estado</strong>
+                </div>
+                <ul class="list-group list-group-flush">
+                    @foreach (var item in projetosPorEstado)
+                    {
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>@item.Nome</span>
+                            <span class="badge text-bg-success">@item.Total</span>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <strong>Tarefas por estado</strong>
+                </div>
+                <ul class="list-group list-group-flush">
+                    @foreach (var item in tarefasPorEstado)
+                    {
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>@item.Nome</span>
+                            <span class="badge text-bg-warning">@item.Total</span>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <strong>Ultimas faturas</strong>
+                </div>
+                <ul class="list-group list-group-flush">
+                    @foreach (var fatura in ultimasFaturas)
+                    {
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <span>@(fatura.Projeto?.Nome ?? "Projeto sem nome")</span>
+                                <strong>@FormatarMoeda(fatura.Total)</strong>
+                            </div>
+                            <small class="text-muted">@fatura.Data.ToString("dd/MM/yyyy")</small>
+                        </li>
+                    }
+                </ul>
+            </div>
         </div>
     </div>
-
-    <!-- Empregados -->
-    <div class="col-md-3">
-        <div class="card text-white bg-dark mb-3 p-3">
-            <h5>Empregados</h5>
-            <h2>@totalEmpregados</h2>
-        </div>
-    </div>
-
-</div>
-
-<!-- Faturação -->
-<div class="card p-3 mt-3">
-    <h4>Total Faturado</h4>
-    <h2 class="text-success">@totalFaturado €</h2>
-</div>
+}
 
 @code {
+    private static readonly CultureInfo CulturaPortugal = CultureInfo.GetCultureInfo("pt-PT");
+
+    private bool aCarregar = true;
 
     private int totalClientes;
     private int totalProjetos;
     private int totalTarefas;
     private int totalEmpregados;
+    private int totalFaturas;
+    private int projetosAtivos;
+    private int projetosConcluidos;
+    private int tarefasPendentes;
+    private int tarefasConcluidas;
+    private int tarefasAltaPrioridade;
 
     private decimal totalFaturado;
+    private decimal orcamentoTotal;
+    private decimal valorMedioFatura;
+    private decimal percentagemFaturada;
+    private decimal taxaConclusaoTarefas;
+
+    private List<IndicadorAgrupado> projetosPorEstado = [];
+    private List<IndicadorAgrupado> tarefasPorEstado = [];
+    private List<Fatura> ultimasFaturas = [];
 
     protected override async Task OnInitializedAsync()
     {
         await CarregarDados();
+        aCarregar = false;
     }
 
     /// <summary>
-    /// Carrega dados para o dashboard
+    /// Carrega e calcula os indicadores apresentados no dashboard.
     /// </summary>
     private async Task CarregarDados()
     {
-        totalClientes = (await ClienteService.GetAllAsync()).Count;
-        totalProjetos = (await ProjetoService.GetAllAsync()).Count;
-        totalTarefas = (await TarefaService.GetAllAsync()).Count;
-        totalEmpregados = (await EmpregadoService.GetAllAsync()).Count;
-
+        var clientes = await ClienteService.GetAllAsync();
+        var projetos = await ProjetoService.GetAllAsync();
+        var tarefas = await TarefaService.GetAllAsync();
+        var empregados = await EmpregadoService.GetAllAsync();
         var faturas = await FaturaService.GetAllAsync();
+
+        totalClientes = clientes.Count;
+        totalProjetos = projetos.Count;
+        totalTarefas = tarefas.Count;
+        totalEmpregados = empregados.Count;
+        totalFaturas = faturas.Count;
+
+        projetosAtivos = projetos.Count(p => EstadoIgual(p.Estado, "Ativo"));
+        projetosConcluidos = projetos.Count(p => EstadoIgual(p.Estado, "Concluido") || EstadoIgual(p.Estado, "Concluído"));
+
+        tarefasPendentes = tarefas.Count(t => EstadoIgual(t.Estado, "Pendente"));
+        tarefasConcluidas = tarefas.Count(t => EstadoIgual(t.Estado, "Concluida") || EstadoIgual(t.Estado, "Concluída"));
+        tarefasAltaPrioridade = tarefas.Count(t => string.Equals(t.Prioridade, "Alta", StringComparison.OrdinalIgnoreCase));
+
         totalFaturado = faturas.Sum(f => f.Total);
+        orcamentoTotal = projetos.Sum(p => p.Orcamento);
+        valorMedioFatura = totalFaturas == 0 ? 0 : totalFaturado / totalFaturas;
+        percentagemFaturada = orcamentoTotal == 0 ? 0 : totalFaturado / orcamentoTotal * 100;
+        taxaConclusaoTarefas = totalTarefas == 0 ? 0 : (decimal)tarefasConcluidas / totalTarefas * 100;
+
+        projetosPorEstado = AgruparPorTexto(projetos.Select(p => p.Estado));
+        tarefasPorEstado = AgruparPorTexto(tarefas.Select(t => t.Estado));
+        ultimasFaturas = faturas
+            .OrderByDescending(f => f.Data)
+            .Take(5)
+            .ToList();
     }
+
+    private static List<IndicadorAgrupado> AgruparPorTexto(IEnumerable<string> valores)
+    {
+        return valores
+            .Where(valor => !string.IsNullOrWhiteSpace(valor))
+            .GroupBy(valor => valor.Trim())
+            .OrderByDescending(grupo => grupo.Count())
+            .Select(grupo => new IndicadorAgrupado(grupo.Key, grupo.Count()))
+            .ToList();
+    }
+
+    private static bool EstadoIgual(string valor, string esperado)
+    {
+        return string.Equals(valor.Trim(), esperado, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string FormatarMoeda(decimal valor)
+    {
+        return valor.ToString("C", CulturaPortugal);
+    }
+
+    private sealed record IndicadorAgrupado(string Nome, int Total);
 }
